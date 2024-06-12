@@ -21,14 +21,6 @@ pipeline {
             }
         }
 
-        stage('Run image') {
-            steps {
-                // Run Docker image
-                echo 'Running the Docker image...'
-                sh "docker run -d -p 5000:5000 mukeshkr1234/jenkins-pipe:v-1.0"
-            }
-        }
-        
         stage('Deploy') {
             steps {
                 // Deployment steps (if any)

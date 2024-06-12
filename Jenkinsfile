@@ -1,15 +1,26 @@
 pipeline {
     agent any 
     stages {
+        stage ("test"){
+            steps {
+                echo "Testing the application..."
+                echo "Testing the application for $BRANCH_NAME ..."
+            }
+        }
         stage('Build pulling from GitHub') {
             steps {
                 // Pull the code from the repository
                 echo 'Building the application...'
-                sh "git pull origin main"
+                sh "git pull origin $BRANCH_NAME"
             }
         }
         
         stage('Build image') {
+            when {
+                expression {
+                    BRANCH_NAME == 'main'
+                }
+            }
             steps {
                 // Build and push Docker image
                 echo 'Building the Docker image...'
@@ -22,6 +33,11 @@ pipeline {
         }
 
         stage('Deploy') {
+             when {
+                expression {
+                    BRANCH_NAME == 'main'
+                }
+            }
             steps {
                 // Deployment steps (if any)
                 echo 'Deploying the application...'

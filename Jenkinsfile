@@ -1,48 +1,55 @@
+@Library('jenkins-shared-library-01') _
+
 pipeline {
-    agent any 
+    agent any
+    
+    environment {
+        // Define any environment variables here if needed
+        // Example: SOME_ENV_VAR = 'some_value'
+    }
+    
     stages {
-        stage ("test"){
+        stage("Test") {
             steps {
                 echo "Testing the application..."
-                echo "Testing the application for $BRANCH_NAME ..."
+                echo "Testing the application for ${env.BRANCH_NAME} ..."
             }
         }
-        stage('Build pulling from GitHub') {
+
+        stage('Pull from GitHub') {
             steps {
-                // Pull the code from the repository
-                echo 'Building the application...'
-                sh "git pull origin $BRANCH_NAME"
+                script {
+                    githubPull()
+                }
             }
         }
         
-        stage('Build image') {
-            when {
-                expression {
-                    BRANCH_NAME == 'main'
-                }
-            }
+        stage('Build Image') {
             steps {
-                // Build and push Docker image
-                echo 'Building the Docker image...'
-                withCredentials([usernamePassword(credentialsId: 'docker-hup-repo', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
-                    sh "docker build -t $USER/jenkins-pipe:v-1.0 ."
-                    sh "echo $PASS | docker login -u $USER --password-stdin"
-                    sh "docker push $USER/jenkins-pipe:v-1.0"
+                script {
+                    buildImage()
                 }
             }
         }
 
         stage('Deploy') {
-             when {
-                expression {
-                    BRANCH_NAME == 'main'
-                }
+            when {
+                branch 'main'
             }
             steps {
-                // Deployment steps (if any)
                 echo 'Deploying the application...'
                 // Add deployment commands here
+                // Example: sh 'deploy.sh'
             }
+        }
+    }
+    
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check the logs.'
         }
     }
 }
